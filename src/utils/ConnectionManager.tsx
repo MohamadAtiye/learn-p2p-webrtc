@@ -35,7 +35,7 @@ export class ConnectionManager extends EventEmitter {
     this.dataChannel = this.pcs.data.createDataChannel("MyApp Channel");
     this.dataChannel.onopen = (d) => {
       if (!this.remoteName) {
-        this.dataChannel.send(JSON.stringify({ type: "whoAreYou" }));
+        this.dataChannelSend(mType.whoAreYou, undefined);
       }
     };
     this.dataChannel.onmessage = (d) => console.log("dataChannel onmessage", d);
@@ -107,15 +107,26 @@ export class ConnectionManager extends EventEmitter {
     const msg: DataMsg = JSON.parse(d.data);
     if (msg.type === "chat") self.emit("chat", msg.data);
     else if (msg.type === "whoAreYou") {
-      this.dataChannel.send(JSON.stringify({ type: "iAm", data: self.myName }));
+      this.dataChannelSend(mType.iAm, self.myName);
     } else if (msg.type === "iAm") {
       self.remoteName = msg.data;
       this.emit("update", "remoteName");
     }
   }
 
+  // TODO sanitise data
+  private dataChannelSend(type: mType, payload: any) {
+    let data = !payload
+      ? undefined
+      : typeof payload === "string"
+      ? payload
+      : JSON.stringify(payload);
+    console.log("dataChannelSend", type, payload);
+    this.dataChannel.send(JSON.stringify({ type, data }));
+  }
+
   sendChat(data: string) {
-    this.dataChannel.send(JSON.stringify({ type: "chat", data }));
+    this.dataChannelSend(mType.chat, data);
     console.log("Sent Data: " + data);
   }
 

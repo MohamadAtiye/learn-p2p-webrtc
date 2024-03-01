@@ -4,6 +4,7 @@ import React, {
   useEffect,
   ReactNode,
   useContext,
+  useMemo,
 } from "react";
 import {
   requestCameraPermission,
@@ -55,9 +56,8 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
     microphone: "denied" as PermissionState,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionManager, setConnectionManager] = useState<ConnectionManager>(
-    new ConnectionManager()
-  );
+  const connectionManager = useMemo(() => new ConnectionManager(), []);
+
   const [chat, setChat] = useState<ChatMsg[]>([]);
 
   // monitor camera and microphone permissions

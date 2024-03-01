@@ -6,8 +6,19 @@ import VideoCallIcon from "@mui/icons-material/VideoCall";
 import AddIcCallIcon from "@mui/icons-material/AddIcCall";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ScreenShareIcon from "@mui/icons-material/ScreenShare";
-import { getDisplayMedia, getMediaStream } from "../utils/webrtcWrapper";
+import {
+  StreamType,
+  getDisplayMedia,
+  getMediaStream,
+  listMediaDevices,
+} from "../utils/webrtcWrapper";
 import AudioVisualizer from "./AudioVisualizer";
+
+(async () => {
+  const audio = await listMediaDevices("audio");
+  const video = await listMediaDevices("video");
+  console.log("MEDIA DEVICES", audio, video);
+})();
 
 const MyBox = () => {
   const { connectionManager, permissions } = useData();
@@ -86,11 +97,6 @@ const MyBox = () => {
     };
   }, [connectionManager]);
 
-  enum StreamType {
-    video = "video",
-    screen = "screen",
-    audio = "audio",
-  }
   const addTrack = async (src: StreamType) => {
     if (connectionManager.status !== "connected") return;
 

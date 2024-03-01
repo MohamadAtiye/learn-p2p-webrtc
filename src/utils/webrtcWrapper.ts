@@ -1,4 +1,9 @@
 // type PermissionName = "geolocation" | "notifications" | "persistent-storage" | "push" | "screen-wake-lock" | "xr-spatial-tracking"
+export enum StreamType {
+  video = "video",
+  screen = "screen",
+  audio = "audio",
+}
 
 export const checkPermission = async (
   name: PermissionName | "camera" | "microphone"
@@ -69,4 +74,25 @@ export const getDisplayMedia = async (
     console.error("Error accessing media devices.", error);
     return null;
   }
+};
+
+// type MediaDeviceKind = "audioinput" | "audiooutput" | "videoinput";
+export const listMediaDevices = async (src: "audio" | "video") => {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const compare = src === "audio" ? "audioinput" : "videoinput";
+    return devices.filter((d) => d.kind === compare);
+    //  return devices.filter
+    //     .then((devices) => {
+    // devices.forEach((device) => {
+    //   console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
+    // });
+  } catch (error) {
+    console.error("Error getting media devices.", error);
+    return null;
+  }
+  // })
+  // .catch((err) => {
+  //     console.error(`${err.name}: ${err.message}`);
+  // });
 };

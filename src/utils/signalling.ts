@@ -4,6 +4,9 @@ export enum mType {
   answer = "answer",
   candidate = "candidate",
   hangup = "hangup",
+  chat = "chat",
+  whoAreYou = "whoAreYou",
+  iAm = "iAm",
 }
 export type Message = {
   type: mType;
