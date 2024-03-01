@@ -33,7 +33,20 @@ function DisplayMessage({ message }: DisplayMessageProps) {
 }
 
 const ChatBox = () => {
-  const { connection, sendChat, chat } = useData();
+  const { connectionManager, sendChat, chat } = useData();
+  const [status, setStatus] = useState("new");
+
+  useEffect(() => {
+    function handleUpdates(field: string) {
+      if (field === "status") setStatus(connectionManager.status);
+    }
+    connectionManager.on("update", handleUpdates);
+
+    return () => {
+      connectionManager.off("update", handleUpdates);
+    };
+  }, [connectionManager]);
+
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLDivElement>(null);
 
@@ -92,7 +105,7 @@ const ChatBox = () => {
           fullWidth
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={connection.status !== "connected"}
+          disabled={status !== "connected"}
           inputProps={{
             maxLength: TEXT_MAX_LENGTH,
           }}
@@ -104,7 +117,7 @@ const ChatBox = () => {
           color="primary"
           variant="contained"
           onClick={handleSend}
-          disabled={connection.status !== "connected"}
+          disabled={status !== "connected"}
         >
           Send
         </Button>

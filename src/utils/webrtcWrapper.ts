@@ -53,3 +53,20 @@ export const getMediaStream = async (
     return null;
   }
 };
+
+export const getDisplayMedia = async (
+  constraints: DisplayMediaStreamOptions = {
+    audio: false,
+    video: {
+      cursor: "always",
+    } as MediaTrackConstraints,
+  }
+) => {
+  try {
+    const stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+    return stream;
+  } catch (error) {
+    console.error("Error accessing media devices.", error);
+    return null;
+  }
+};

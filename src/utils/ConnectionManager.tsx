@@ -3,19 +3,6 @@ import { Message, Signal, mType } from "./signalling";
 
 // type RTCPeerConnectionState = "closed" | "connected" | "connecting" | "disconnected" | "failed" | "new"
 
-export type Peer = {
-  myName: string;
-  remoteName: string;
-  meetId: string;
-  status: RTCPeerConnectionState; //"on" | "off";
-
-  myStream?: MediaStream;
-  remoteStream?: MediaStream;
-
-  errors: string[];
-  logs: string[];
-};
-
 export type DataMsg = {
   type: "chat" | "whoAreYou" | "iAm";
   data: string;
@@ -28,30 +15,26 @@ export class ConnectionManager extends EventEmitter {
     out: new RTCPeerConnection(),
   };
   dataChannel;
-  connection: Peer = {
-    myName: "",
-    remoteName: "",
-    meetId: "",
-    status: "new",
 
-    myStream: undefined,
-    remoteStream: undefined,
+  myName = "";
+  remoteName = "";
+  meetId = "";
+  status = "new";
 
-    errors: [],
-    logs: [],
-  };
-  signal;
+  myStream = new MediaStream();
+  remoteStream = new MediaStream();
 
-  constructor(myName: string, meetId: string) {
+  errors: string[] = [];
+  logs: string[] = [];
+
+  signal = new Signal("webtc");
+
+  constructor() {
     super();
-    this.connection.myName = myName;
-    this.connection.meetId = meetId;
-    this.signal = new Signal(meetId);
-    this.signal.sendReady(myName);
 
     this.dataChannel = this.pcs.data.createDataChannel("MyApp Channel");
     this.dataChannel.onopen = (d) => {
-      if (!this.connection.remoteName) {
+      if (!this.remoteName) {
         this.dataChannel.send(JSON.stringify({ type: "whoAreYou" }));
       }
     };
@@ -68,30 +51,14 @@ export class ConnectionManager extends EventEmitter {
     };
   }
 
-  handleReceiveData(self: ConnectionManager, d: MessageEvent<any>) {
-    console.log("receiveChannel onmessage", d.data);
+  init = (myName: string, meetId: string) => {
+    this.myName = myName;
+    this.meetId = meetId;
+    this.emit("update", "meetId");
+    this.emit("update", "myName");
 
-    const msg: DataMsg = JSON.parse(d.data);
-    if (msg.type === "chat") self.emit("chat", msg.data);
-    else if (msg.type === "whoAreYou") {
-      this.dataChannel.send(
-        JSON.stringify({ type: "iAm", data: self.connection.myName })
-      );
-    } else if (msg.type === "iAm") {
-      self.connection.remoteName = msg.data;
-      this.emit("update", {
-        field: "remoteName",
-        value: this.connection.remoteName,
-      });
-    }
-  }
+    this.signal.sendReady(myName);
 
-  sendChat(data: string) {
-    this.dataChannel.send(JSON.stringify({ type: "chat", data }));
-    console.log("Sent Data: " + data);
-  }
-
-  init = () => {
     this.signal.listen((m) => {
       switch (m.type) {
         // handle someone joined room
@@ -123,51 +90,50 @@ export class ConnectionManager extends EventEmitter {
 
     this.pcs.data.ontrack = (e) => {
       console.log("ontrack", e);
-      this.connection.remoteStream = e.streams[0];
-      this.emit("update", {
-        field: "remoteStream",
-        value: this.connection.remoteStream,
-      });
+      this.remoteStream = e.streams[0];
+      this.emit("update", "remoteStream");
     };
 
     this.pcs.data.onconnectionstatechange = (ev) => {
-      this.emit("update", {
-        field: "status",
-        value: this.pcs.data.connectionState,
-      });
+      this.status = this.pcs.data.connectionState;
+      this.emit("update", "status");
       console.log("onconnectionstatechange", this.pcs.data.connectionState);
     };
   };
 
+  handleReceiveData(self: ConnectionManager, d: MessageEvent<any>) {
+    console.log("receiveChannel onmessage", d.data);
+
+    const msg: DataMsg = JSON.parse(d.data);
+    if (msg.type === "chat") self.emit("chat", msg.data);
+    else if (msg.type === "whoAreYou") {
+      this.dataChannel.send(JSON.stringify({ type: "iAm", data: self.myName }));
+    } else if (msg.type === "iAm") {
+      self.remoteName = msg.data;
+      this.emit("update", "remoteName");
+    }
+  }
+
+  sendChat(data: string) {
+    this.dataChannel.send(JSON.stringify({ type: "chat", data }));
+    console.log("Sent Data: " + data);
+  }
+
   // step 1: Person 1 create Offer for OUTGOING
   createOffer = async (): Promise<RTCSessionDescriptionInit | undefined> => {
     try {
-      if (this.connection.myStream) {
-        // check Stream tracks
-        const videoTracks = this.connection.myStream.getVideoTracks();
-        const audioTracks = this.connection.myStream.getAudioTracks();
-        if (videoTracks.length > 0) {
-          console.log(`Using video device: ${videoTracks[0].label}`);
-        }
-        if (audioTracks.length > 0) {
-          console.log(`Using audio device: ${audioTracks[0].label}`);
-        }
+      const myTracks = this.myStream.getTracks();
+      myTracks.forEach((t) => {
+        console.log(`using ${t.kind} track ${t.label}`);
+      });
 
-        this.emit("update", {
-          field: "myStream",
-          value: this.connection.myStream,
-        });
+      const senders = this.pcs.data.getSenders();
 
-        // add stream tracks to peer connection
-        this.connection.myStream
-          .getTracks()
-          .forEach((track) =>
-            this.pcs.data.addTrack(
-              track,
-              this.connection.myStream as MediaStream
-            )
-          );
-      }
+      // add missing tracks to PC
+      myTracks.forEach((track) => {
+        if (!senders.find((s) => s.track?.id === track.id))
+          this.pcs.data.addTrack(track, this.myStream as MediaStream);
+      });
 
       // create offer with tracks
       const offer = await this.pcs.data.createOffer();
@@ -176,7 +142,7 @@ export class ConnectionManager extends EventEmitter {
       this.pcs.data.setLocalDescription(offer);
 
       if (!offer || !offer.sdp) {
-        this.connection.errors.push("Failed to createOffer");
+        this.errors.push("Failed to createOffer");
         return;
       }
 
@@ -217,26 +183,23 @@ export class ConnectionManager extends EventEmitter {
   //-- MESSAGE HANDLERS
   handleGotReady = async (m: Message) => {
     //if already connected, ignore
-    if (this.connection.status === "connected") {
+    if (this.status === "connected") {
       console.log("GOT READY MESSAGE", m);
       console.log("ALREADY BUSY, WILL IGNORE");
       return;
     }
 
-    this.connection.remoteName = m.data;
+    this.remoteName = m.data;
 
     await this.createOffer();
 
-    this.emit("update", {
-      field: "remoteName",
-      value: this.connection.remoteName,
-    });
+    this.emit("update", "remoteName");
   };
 
   handleGotOffer = async (m: Message) => {
     const answer = await this.createAnswer(m.data);
     if (!answer || !answer.sdp) {
-      this.connection.errors.push("Failed to answer");
+      this.errors.push("Failed to answer");
       return;
     }
 
@@ -252,12 +215,19 @@ export class ConnectionManager extends EventEmitter {
   };
 
   //-- MEDIA HANDLERS
-  addVideo(stream: MediaStream) {
-    if (this.connection.myStream) {
-      console.log(this.connection.myStream, "exist, NOT adding stream");
-    } else {
-      this.connection.myStream = stream;
-      return this.createOffer();
-    }
+  addTrack(stream: MediaStream) {
+    if (!stream) return;
+    const videoTracks = stream.getTracks();
+    const myTracks = this.myStream.getTracks();
+
+    videoTracks.forEach((t) => {
+      if (!myTracks.find((mt) => mt.id === t.id)) {
+        this.myStream.addTrack(t);
+      }
+    });
+
+    this.emit("update", "myStream");
+
+    return this.createOffer();
   }
 }
