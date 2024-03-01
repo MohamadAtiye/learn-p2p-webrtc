@@ -56,7 +56,7 @@ export const getMediaStream = async (
 
 export const getDisplayMedia = async (
   constraints: DisplayMediaStreamOptions = {
-    audio: false,
+    audio: true,
     video: {
       cursor: "always",
     } as MediaTrackConstraints,

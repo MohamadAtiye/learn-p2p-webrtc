@@ -128,11 +128,14 @@ export class ConnectionManager extends EventEmitter {
       });
 
       const senders = this.pcs.data.getSenders();
+      console.log("senders", senders);
 
       // add missing tracks to PC
       myTracks.forEach((track) => {
-        if (!senders.find((s) => s.track?.id === track.id))
+        if (!senders.find((s) => s.track?.id === track.id)) {
+          console.log("adding new track to PC", track);
           this.pcs.data.addTrack(track, this.myStream as MediaStream);
+        }
       });
 
       // create offer with tracks
@@ -217,10 +220,10 @@ export class ConnectionManager extends EventEmitter {
   //-- MEDIA HANDLERS
   addTrack(stream: MediaStream) {
     if (!stream) return;
-    const videoTracks = stream.getTracks();
+    const newTracks = stream.getTracks();
     const myTracks = this.myStream.getTracks();
 
-    videoTracks.forEach((t) => {
+    newTracks.forEach((t) => {
       if (!myTracks.find((mt) => mt.id === t.id)) {
         this.myStream.addTrack(t);
       }

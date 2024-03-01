@@ -1,5 +1,5 @@
-import { Box, Container, IconButton, Paper, Typography } from "@mui/material";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import { Box, Container, Paper } from "@mui/material";
+import React from "react";
 import { Header } from "./fragments/Header";
 import { Copyright } from "./fragments/Copyright";
 import useData from "./hooks/Data";

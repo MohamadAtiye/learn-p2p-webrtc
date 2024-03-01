@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 
 interface DisplayVideoProps {
-  videoInfo: {
+  streamInfo: {
     id: string;
     stream: MediaStream;
   };
 }
-const DisplayVideo = ({ videoInfo }: DisplayVideoProps) => {
+const DisplayVideo = ({ streamInfo }: DisplayVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.srcObject = videoInfo.stream;
+      videoRef.current.srcObject = streamInfo.stream;
     }
-  }, [videoInfo.stream, videoRef]);
+  }, [streamInfo.stream, videoRef]);
 
   return <video ref={videoRef} height={"100px"} autoPlay />;
 };

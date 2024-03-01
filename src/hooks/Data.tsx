@@ -6,8 +6,6 @@ import React, {
   useContext,
 } from "react";
 import {
-  getDisplayMedia,
-  getMediaStream,
   requestCameraPermission,
   requestMicrophonePermission,
 } from "../utils/webrtcWrapper";
