@@ -6,12 +6,12 @@ import React, {
   useContext,
 } from "react";
 import {
-  ConnectionManager,
-  Peer,
+  getMediaStream,
   requestCameraPermission,
   requestMicrophonePermission,
 } from "../utils/webrtcWrapper";
 import FullPageLoading from "../fragments/FullPageLoading";
+import { ConnectionManager, Peer } from "../utils/ConnectionManager";
 
 // Define the shape of the context state
 interface DataContextState {
@@ -21,6 +21,9 @@ interface DataContextState {
   };
   joinMeeting: (name: string, meetId: string) => void;
   connection: Peer;
+  sendChat: (text: string) => void;
+  chat: ChatMsg[];
+  addVideo: () => void;
 }
 
 // Create Context Object
@@ -34,16 +37,24 @@ export const DataContext = createContext<DataContextState>({
     myName: "",
     remoteName: "",
     meetId: "",
-    status: "off",
+    status: "new",
 
-    pc: new RTCPeerConnection(),
     myStream: undefined,
     remoteStream: undefined,
 
     errors: [],
     logs: [],
   },
+  sendChat: (t) => {},
+  chat: [],
+  addVideo: () => {},
 });
+
+export type ChatMsg = {
+  from: "me" | "remote";
+  text: string;
+  ts: number;
+};
 
 // Define the props for the provider component
 interface DataContextProviderProps {
@@ -60,14 +71,14 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [connectionManager, setConnectionManager] =
     useState<ConnectionManager>();
+  const [chat, setChat] = useState<ChatMsg[]>([]);
 
   const [connection, setConnection] = useState<Peer>({
     myName: "",
     remoteName: "",
     meetId: "",
-    status: "off",
+    status: "new",
 
-    pc: new RTCPeerConnection(),
     myStream: undefined,
     remoteStream: undefined,
 
@@ -112,10 +123,16 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
       setConnection((p) => ({ ...p, [field]: value }));
     }
 
+    function handleChat(data: string) {
+      setChat((p) => [...p, { from: "remote", ts: Date.now(), text: data }]);
+    }
+
     connectionManager && connectionManager.on("update", updateConnection);
+    connectionManager && connectionManager.on("chat", handleChat);
 
     return () => {
       connectionManager && connectionManager.off("update", updateConnection);
+      connectionManager && connectionManager.off("chat", handleChat);
     };
   }, [connectionManager]);
 
@@ -125,7 +142,7 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
 
     try {
       setConnection((p) => ({ ...p, meetId, myName }));
-      const newConnection = new ConnectionManager({ myName, meetId });
+      const newConnection = new ConnectionManager(myName, meetId);
       newConnection.init();
       setConnectionManager(newConnection);
 
@@ -139,8 +156,25 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
     setTimeout(() => setIsLoading(false), 500);
   };
 
+  const sendChat = (text: string) => {
+    setChat((p) => [...p, { from: "me", ts: Date.now(), text }]);
+    connectionManager?.sendChat(text);
+  };
+
+  const addVideo = async () => {
+    if (connection.status !== "connected") return;
+    const videoStream = await getMediaStream({ video: true, audio: false });
+    if (!videoStream) {
+      console.log("failed to get stream");
+      return;
+    }
+    connectionManager?.addVideo(videoStream);
+  };
+
   return (
-    <DataContext.Provider value={{ permissions, joinMeeting, connection }}>
+    <DataContext.Provider
+      value={{ permissions, joinMeeting, connection, sendChat, chat, addVideo }}
+    >
       {isLoading && <FullPageLoading />}
       {children}
     </DataContext.Provider>

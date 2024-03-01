@@ -57,22 +57,6 @@ export class Signal {
 
   sendCandidate = (e: RTCPeerConnectionIceEvent) => {
     if (!e.candidate) return this.send(mType.candidate, undefined);
-    // const data = {
-    //   type: "candidate",
-    //   candidate: e.candidate.candidate,
-    //   sdpMid: e.candidate?.sdpMid ?? undefined,
-    //   sdpMLineIndex: e.candidate?.sdpMLineIndex ?? undefined,
-    // };
-    // this.send(mType.candidate, data);
-    // const data: RTCIceCandidateInit = {
-    // const data = {
-    //   type: "candidate",
-    //   candidate: {
-    //     candidate: e.candidate.candidate,
-    //     sdpMLineIndex: e.candidate?.sdpMLineIndex ?? undefined,
-    //     sdpMid: e.candidate?.sdpMid ?? undefined,
-    //   },
-    // };
 
     const data = {
       candidate: e.candidate.candidate,
