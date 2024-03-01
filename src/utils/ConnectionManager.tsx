@@ -9,11 +9,8 @@ export type DataMsg = {
 };
 
 export class ConnectionManager extends EventEmitter {
-  pcs = {
-    data: new RTCPeerConnection(),
-    in: new RTCPeerConnection(),
-    out: new RTCPeerConnection(),
-  };
+  pc = new RTCPeerConnection();
+
   dataChannel;
 
   myName = "";
@@ -32,7 +29,7 @@ export class ConnectionManager extends EventEmitter {
   constructor() {
     super();
 
-    this.dataChannel = this.pcs.data.createDataChannel("MyApp Channel");
+    this.dataChannel = this.pc.createDataChannel("MyApp Channel");
     this.dataChannel.onopen = (d) => {
       if (!this.remoteName) {
         this.dataChannelSend(mType.whoAreYou, undefined);
@@ -41,7 +38,7 @@ export class ConnectionManager extends EventEmitter {
     this.dataChannel.onmessage = (d) => console.log("dataChannel onmessage", d);
     this.dataChannel.onclose = (d) => console.log("dataChannel onclose", d);
 
-    this.pcs.data.ondatachannel = (event) => {
+    this.pc.ondatachannel = (event) => {
       console.log("Receive Channel Callback");
       const receiveChannel = event.channel;
       receiveChannel.onmessage = (e: MessageEvent<any>) =>
@@ -82,22 +79,22 @@ export class ConnectionManager extends EventEmitter {
       }
     });
 
-    this.pcs.data.onicecandidate = (e) => {
+    this.pc.onicecandidate = (e) => {
       if (e.candidate) {
         this.signal.sendCandidate(e);
       }
     };
 
-    this.pcs.data.ontrack = (e) => {
+    this.pc.ontrack = (e) => {
       console.log("ontrack", e);
       this.remoteStream = e.streams[0];
       this.emit("update", "remoteStream");
     };
 
-    this.pcs.data.onconnectionstatechange = (ev) => {
-      this.status = this.pcs.data.connectionState;
+    this.pc.onconnectionstatechange = (ev) => {
+      this.status = this.pc.connectionState;
       this.emit("update", "status");
-      console.log("onconnectionstatechange", this.pcs.data.connectionState);
+      console.log("onconnectionstatechange", this.pc.connectionState);
     };
   };
 
@@ -138,22 +135,22 @@ export class ConnectionManager extends EventEmitter {
         console.log(`using ${t.kind} track ${t.label}`);
       });
 
-      const senders = this.pcs.data.getSenders();
+      const senders = this.pc.getSenders();
       console.log("senders", senders);
 
       // add missing tracks to PC
       myTracks.forEach((track) => {
         if (!senders.find((s) => s.track?.id === track.id)) {
           console.log("adding new track to PC", track);
-          this.pcs.data.addTrack(track, this.myStream as MediaStream);
+          this.pc.addTrack(track, this.myStream as MediaStream);
         }
       });
 
       // create offer with tracks
-      const offer = await this.pcs.data.createOffer();
+      const offer = await this.pc.createOffer();
 
       // set local description
-      this.pcs.data.setLocalDescription(offer);
+      this.pc.setLocalDescription(offer);
 
       if (!offer || !offer.sdp) {
         this.errors.push("Failed to createOffer");
@@ -175,11 +172,11 @@ export class ConnectionManager extends EventEmitter {
     offer: RTCSessionDescriptionInit
   ): Promise<RTCSessionDescriptionInit | undefined> => {
     try {
-      await this.pcs.data.setRemoteDescription(offer);
+      await this.pc.setRemoteDescription(offer);
 
-      const answer = await this.pcs.data.createAnswer();
+      const answer = await this.pc.createAnswer();
 
-      this.pcs.data.setLocalDescription(answer);
+      this.pc.setLocalDescription(answer);
 
       // send andswer to Person 1
       return answer;
@@ -191,7 +188,7 @@ export class ConnectionManager extends EventEmitter {
 
   // step 3: Person 1 receive answer for OUTGOING
   receiveAnswer = async (answer: RTCSessionDescriptionInit) => {
-    await this.pcs.data.setRemoteDescription(answer);
+    await this.pc.setRemoteDescription(answer);
   };
 
   //-- MESSAGE HANDLERS
@@ -225,7 +222,7 @@ export class ConnectionManager extends EventEmitter {
   };
 
   handleCandidate = async (m: Message) => {
-    await this.pcs.data.addIceCandidate(m.data);
+    await this.pc.addIceCandidate(m.data);
   };
 
   //-- MEDIA HANDLERS
