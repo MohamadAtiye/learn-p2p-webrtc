@@ -4,7 +4,7 @@ import AudioVisualizer from "./AudioVisualizer";
 import CloseIcon from "@mui/icons-material/Close";
 import useData from "../hooks/Data";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const getW = (h: number) => {
   switch (h) {
@@ -44,11 +44,22 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
     sampleRate: 0,
   });
 
+  const [capabilities, setCapabilities] = useState<
+    MediaTrackCapabilities | undefined
+  >({});
+
   const [kind, setKind] = useState("");
 
   useEffect(() => {
     setKind(sender.track?.kind ?? "...");
+    const getCapabilities = sender.track?.getCapabilities();
+    console.log({ getCapabilities });
+    setCapabilities(getCapabilities);
   }, [sender]);
+
+  const maxHeight = useMemo(() => {
+    return capabilities?.height?.max ?? 0;
+  }, [capabilities]);
 
   // MONITOR STATS
   useEffect(() => {
@@ -165,42 +176,52 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
               >
                 480p
               </Button>
-              <Button
-                onClick={() => setVideoRes(720)}
-                title="swtich to 720p"
-                variant="outlined"
-                size="small"
-                disabled={videoStats.height === 720}
-              >
-                720p
-              </Button>
-              <Button
-                onClick={() => setVideoRes(1080)}
-                title="swtich to 1080p"
-                variant="outlined"
-                size="small"
-                disabled={videoStats.height === 1080}
-              >
-                1080p
-              </Button>
-              <Button
-                onClick={() => setVideoRes(1440)}
-                title="swtich to 1440p"
-                variant="outlined"
-                size="small"
-                disabled={videoStats.height === 1440}
-              >
-                1440p
-              </Button>
-              <Button
-                onClick={() => setVideoRes(2160)}
-                title="swtich to 2160p"
-                variant="outlined"
-                size="small"
-                disabled={videoStats.height === 2160}
-              >
-                2160p
-              </Button>
+
+              {maxHeight > 720 && (
+                <Button
+                  onClick={() => setVideoRes(720)}
+                  title="swtich to 720p"
+                  variant="outlined"
+                  size="small"
+                  disabled={videoStats.height === 720}
+                >
+                  720p
+                </Button>
+              )}
+
+              {maxHeight > 1080 && (
+                <Button
+                  onClick={() => setVideoRes(1080)}
+                  title="swtich to 1080p"
+                  variant="outlined"
+                  size="small"
+                  disabled={videoStats.height === 1080}
+                >
+                  1080p
+                </Button>
+              )}
+              {maxHeight > 1440 && (
+                <Button
+                  onClick={() => setVideoRes(1440)}
+                  title="swtich to 1440p"
+                  variant="outlined"
+                  size="small"
+                  disabled={videoStats.height === 1440}
+                >
+                  1440p
+                </Button>
+              )}
+              {maxHeight > 2160 && (
+                <Button
+                  onClick={() => setVideoRes(2160)}
+                  title="swtich to 2160p"
+                  variant="outlined"
+                  size="small"
+                  disabled={videoStats.height === 2160}
+                >
+                  2160p
+                </Button>
+              )}
             </Box>
             <Typography variant="caption">
               {videoStats.width}x{videoStats.height}@{videoStats.fps}fps, at{" "}

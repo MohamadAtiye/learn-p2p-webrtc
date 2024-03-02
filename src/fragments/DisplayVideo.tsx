@@ -11,7 +11,7 @@ const DisplayVideo = ({ track }: DisplayVideoProps) => {
     if (videoRef.current) videoRef.current.srcObject = s;
   }, [track]);
 
-  return <video ref={videoRef} autoPlay style={{ width: "100%" }} />;
+  return <video ref={videoRef} autoPlay style={{ width: "100%" }} controls />;
 };
 
 export default DisplayVideo;

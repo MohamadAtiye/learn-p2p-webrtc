@@ -63,7 +63,7 @@ const MediaDevicesSelector = () => {
           : false,
       video:
         device.kind === "videoinput"
-          ? { deviceId: { ideal: device.deviceId } }
+          ? { deviceId: { ideal: device.deviceId }, frameRate: { ideal: 30 } }
           : false,
     };
     addTrack(
