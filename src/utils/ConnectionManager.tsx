@@ -136,7 +136,6 @@ export class ConnectionManager extends EventEmitter {
       });
 
       const senders = this.pc.getSenders();
-      console.log("senders", senders);
 
       // add missing tracks to PC
       myTracks.forEach((track) => {
@@ -189,6 +188,8 @@ export class ConnectionManager extends EventEmitter {
   // step 3: Person 1 receive answer for OUTGOING
   receiveAnswer = async (answer: RTCSessionDescriptionInit) => {
     await this.pc.setRemoteDescription(answer);
+
+    this.emit("update", "senders");
   };
 
   //-- MESSAGE HANDLERS
@@ -237,8 +238,18 @@ export class ConnectionManager extends EventEmitter {
       }
     });
 
-    this.emit("update", "myStream");
-
     return this.createOffer();
+  }
+
+  closeTrack(sender: RTCRtpSender) {
+    if (sender.track) {
+      // const id = sender.track.id;
+      this.myStream.removeTrack(sender.track);
+      sender.track.stop();
+    }
+    this.pc.removeTrack(sender);
+
+    this.emit("update", "senders");
+    // return this.createOffer();
   }
 }

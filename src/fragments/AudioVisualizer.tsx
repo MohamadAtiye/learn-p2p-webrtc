@@ -4,31 +4,30 @@ import { LiveAudioVisualizer } from "react-audio-visualize";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 
 interface AudioVisualizerProps {
-  streamInfo: {
-    id: string;
-    stream: MediaStream;
-  };
+  track: MediaStreamTrack;
   isLocal: boolean;
 }
 
 const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   isLocal,
-  streamInfo,
+  track,
 }) => {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
   const audioRef = useRef<HTMLAudioElement>(null);
   useEffect(() => {
-    if (audioRef.current) audioRef.current.srcObject = streamInfo.stream;
-    const recorder = new MediaRecorder(streamInfo.stream);
+    const stream = new MediaStream();
+    stream.addTrack(track);
+    if (audioRef.current) audioRef.current.srcObject = stream;
+    const recorder = new MediaRecorder(stream);
     recorder.start();
     setMediaRecorder(recorder);
 
     return () => {
       recorder.stop();
     };
-  }, [streamInfo]);
+  }, [track]);
 
   // REMOTE VOLUME CONTROL
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);

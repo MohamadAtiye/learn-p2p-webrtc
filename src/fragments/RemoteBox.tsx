@@ -3,70 +3,21 @@ import useData from "../hooks/Data";
 import { useEffect, useState } from "react";
 import DisplayVideo from "./DisplayVideo";
 import AudioVisualizer from "./AudioVisualizer";
+import ReceiverMediaBox from "./ReceiverMediaBox";
 
 const RemoteBox = () => {
   const { connectionManager } = useData();
-  const [audioStreams, setAudioStreams] = useState<
-    { id: string; stream: MediaStream }[]
-  >([]);
-  const [videoStreams, setVideoStreams] = useState<
-    { id: string; stream: MediaStream }[]
-  >([]);
+
   const [remoteName, setRemoteName] = useState("");
+  const [receivers, setReceivers] = useState<RTCRtpReceiver[]>([]);
   const [status, setStatus] = useState("new");
 
   useEffect(() => {
     function handleUpdates(field: string) {
       console.log("got update", field);
       if (field === "remoteStream") {
-        const videoTracks = connectionManager.remoteStream.getVideoTracks();
-        const audioTracks = connectionManager.remoteStream.getAudioTracks();
-
-        console.log("handleUpdates, remoteStream,", videoTracks, audioTracks);
-
-        setVideoStreams((prev) => {
-          //remove closed tracks
-          const removed: string[] = [];
-          prev.forEach((p) => {
-            if (!videoTracks.find((t) => t.id === p.id)) {
-              removed.push(p.id);
-            }
-          });
-
-          //add new tracks
-          const added: { id: string; stream: MediaStream }[] = [];
-          videoTracks.forEach((track) => {
-            if (!prev.find((p) => p.id === track.id)) {
-              const stream = new MediaStream();
-              stream.addTrack(track);
-              added.push({ id: track.id, stream });
-            }
-          });
-
-          return prev.filter((p) => !removed.includes(p.id)).concat(added);
-        });
-
-        setAudioStreams((prev) => {
-          //remove closed tracks
-          const removed: string[] = [];
-          prev.forEach((p) => {
-            if (!audioTracks.find((t) => t.id === p.id)) {
-              removed.push(p.id);
-            }
-          });
-
-          //add new tracks
-          const added: { id: string; stream: MediaStream }[] = [];
-          audioTracks.forEach((track) => {
-            if (!prev.find((p) => p.id === track.id)) {
-              const stream = new MediaStream();
-              stream.addTrack(track);
-              added.push({ id: track.id, stream });
-            }
-          });
-
-          return prev.filter((p) => !removed.includes(p.id)).concat(added);
-        });
+        const receivers = connectionManager.pc.getReceivers();
+        setReceivers(receivers);
       } else if (field === "remoteName") {
         setRemoteName(connectionManager.remoteName);
       } else if (field === "status") {
@@ -92,15 +43,10 @@ const RemoteBox = () => {
       <Typography variant="h6" align="center">
         {remoteName}
       </Typography>
-      <Box>
-        {videoStreams.map((s) => (
-          <DisplayVideo key={s.id} streamInfo={s} />
-        ))}
-      </Box>
 
-      {audioStreams.map((s) => (
-        <AudioVisualizer key={s.id} streamInfo={s} isLocal={false} />
-      ))}
+      {receivers.map(
+        (r) => r.track && <ReceiverMediaBox receiver={r} key={r.track.id} />
+      )}
     </Box>
   );
 };

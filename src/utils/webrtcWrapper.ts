@@ -82,17 +82,8 @@ export const listMediaDevices = async (src: "audio" | "video") => {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const compare = src === "audio" ? "audioinput" : "videoinput";
     return devices.filter((d) => d.kind === compare);
-    //  return devices.filter
-    //     .then((devices) => {
-    // devices.forEach((device) => {
-    //   console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
-    // });
   } catch (error) {
     console.error("Error getting media devices.", error);
-    return null;
+    return [];
   }
-  // })
-  // .catch((err) => {
-  //     console.error(`${err.name}: ${err.message}`);
-  // });
 };

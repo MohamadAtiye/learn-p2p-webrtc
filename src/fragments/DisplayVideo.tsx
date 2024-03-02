@@ -1,18 +1,16 @@
+import { Box } from "@mui/material";
 import { useEffect, useRef } from "react";
 
 interface DisplayVideoProps {
-  streamInfo: {
-    id: string;
-    stream: MediaStream;
-  };
+  track: MediaStreamTrack;
 }
-const DisplayVideo = ({ streamInfo }: DisplayVideoProps) => {
+const DisplayVideo = ({ track }: DisplayVideoProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.srcObject = streamInfo.stream;
-    }
-  }, [streamInfo.stream, videoRef]);
+    const s = new MediaStream();
+    s.addTrack(track);
+    if (videoRef.current) videoRef.current.srcObject = s;
+  }, [track]);
 
   return <video ref={videoRef} height={"100px"} autoPlay />;
 };
