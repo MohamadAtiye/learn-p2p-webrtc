@@ -57,7 +57,6 @@ const RemoteBox = () => {
         border: "1px solid black",
         minWidth: "300px",
         flex: 1,
-        padding: "0 24px",
       }}
     >
       <Typography variant="h6" align="center">

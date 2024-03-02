@@ -48,41 +48,40 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
 
   // MONITOR STATS
   useEffect(() => {
-    let prevBytesSent = 0;
+    let prevBytesTransfer = 0;
     let prevTimestamp = 0;
 
-    const interval = setInterval(() => {
-      sender.getStats().then((stats) => {
-        stats.forEach((report) => {
-          if (report.type === "outbound-rtp") {
-            if (prevTimestamp !== 0) {
-              // calculate bitrate
-              let bitrate =
-                (8 * (report.bytesSent - prevBytesSent)) /
-                (report.timestamp - prevTimestamp);
-              bitrate = Math.floor(bitrate);
+    const interval = setInterval(async () => {
+      const stats = await sender.getStats();
+      stats.forEach((report) => {
+        if (report.type === "outbound-rtp") {
+          if (prevTimestamp !== 0) {
+            // calculate bitrate
+            let bitrate =
+              (8 * (report.bytesSent - prevBytesTransfer)) /
+              (report.timestamp - prevTimestamp);
+            bitrate = Math.floor(bitrate);
 
-              let settings = sender.track?.getSettings();
-              if (kind === "video") {
-                setVideoStats({
-                  height: settings?.height ?? 0,
-                  width: settings?.width ?? 0,
-                  fps: report.framesPerSecond,
-                });
-              } else if (kind === "audio") {
-                setAudioStats({
-                  sampleRate: settings?.sampleRate ?? 0,
-                });
-              }
-
-              setStats({
-                bitrate: `${bitrate} kbps`,
+            let settings = sender.track?.getSettings();
+            if (kind === "video") {
+              setVideoStats({
+                height: settings?.height ?? 0,
+                width: settings?.width ?? 0,
+                fps: report.framesPerSecond,
+              });
+            } else if (kind === "audio") {
+              setAudioStats({
+                sampleRate: settings?.sampleRate ?? 0,
               });
             }
-            prevBytesSent = report.bytesSent;
-            prevTimestamp = report.timestamp;
+
+            setStats({
+              bitrate: `${bitrate} kbps`,
+            });
           }
-        });
+          prevBytesTransfer = report.bytesSent;
+          prevTimestamp = report.timestamp;
+        }
       });
     }, 1000);
 
@@ -130,8 +129,6 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
   return (
     <Box sx={{ border: "1px solid black", padding: "0 8px" }}>
       <Box>
-        {/* <Typography variant="caption">{sender.track?.id}</Typography>
-        <br /> */}
         <Typography variant="caption">{sender.track?.label}</Typography>
         {kind === "video" && (
           <Box>
