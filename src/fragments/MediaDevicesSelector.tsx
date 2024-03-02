@@ -37,9 +37,10 @@ const MediaDevicesSelector = () => {
         ? await listMediaDevices("audio")
         : await listMediaDevices("video");
 
-    const usedTracks = connectionManager.myStream
-      .getTracks()
-      .map((t) => t.label);
+    const usedTracks = connectionManager.pc
+      .getSenders()
+      .map((s) => s.track?.label);
+    // connectionManager.myStream.getTracks().map((t) => t.label);
 
     setDevices(available.filter((a) => !usedTracks.includes(a.label)));
 

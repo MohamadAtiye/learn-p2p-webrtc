@@ -1,8 +1,6 @@
 import { Box, Typography } from "@mui/material";
 import useData from "../hooks/Data";
 import { useEffect, useState } from "react";
-import DisplayVideo from "./DisplayVideo";
-import AudioVisualizer from "./AudioVisualizer";
 import ReceiverMediaBox from "./ReceiverMediaBox";
 
 const RemoteBox = () => {
@@ -10,21 +8,43 @@ const RemoteBox = () => {
 
   const [remoteName, setRemoteName] = useState("");
   const [receivers, setReceivers] = useState<RTCRtpReceiver[]>([]);
-  const [status, setStatus] = useState("new");
+
+  useEffect(() => {
+    console.log("receivers useEffect", receivers);
+  }, [receivers]);
 
   useEffect(() => {
     function handleUpdates(field: string) {
-      console.log("got update", field);
-      if (field === "remoteStream") {
-        const receivers = connectionManager.pc.getReceivers();
-        setReceivers(receivers);
-      } else if (field === "remoteName") {
+      if (field === "remoteName") {
         setRemoteName(connectionManager.remoteName);
-      } else if (field === "status") {
-        setStatus(connectionManager.status);
       }
     }
+
+    function updateReceivers() {
+      const temp = connectionManager.pc
+        .getReceivers()
+        .filter((r) => r.track.readyState === "live");
+      console.log("updateReceivers", temp);
+      setReceivers(temp);
+    }
+
     connectionManager.on("update", handleUpdates);
+    connectionManager.pc.ontrack = (e) => {
+      e.streams[0].onaddtrack = (ev) => {
+        console.log("e.streams[0].onaddtrack", ev);
+        updateReceivers();
+      };
+      e.streams[0].onremovetrack = (ev) => {
+        console.log("e.streams[0].onremovetrack", ev);
+        ev.track.stop();
+        updateReceivers();
+      };
+
+      e.track.onended = (ev) => console.log("e.track.onended", ev);
+
+      console.log("connectionManager.pc.ontrack", e);
+      updateReceivers();
+    };
 
     return () => {
       connectionManager.off("update", handleUpdates);

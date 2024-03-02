@@ -180,7 +180,7 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
         {kind === "audio" && (
           <Box>
             <Typography variant="caption">
-              , {audioStats.sampleRate}Hz, at {stats.bitrate}
+              {audioStats.sampleRate}Hz, at {stats.bitrate}
             </Typography>
           </Box>
         )}

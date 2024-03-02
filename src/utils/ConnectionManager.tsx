@@ -19,7 +19,6 @@ export class ConnectionManager extends EventEmitter {
   status = "new";
 
   myStream = new MediaStream();
-  remoteStream = new MediaStream();
 
   errors: string[] = [];
   logs: string[] = [];
@@ -85,10 +84,9 @@ export class ConnectionManager extends EventEmitter {
       }
     };
 
-    this.pc.ontrack = (e) => {
-      console.log("ontrack", e);
-      this.remoteStream = e.streams[0];
-      this.emit("update", "remoteStream");
+    this.pc.onnegotiationneeded = (e) => {
+      console.log("this.pc.onnegotiationneeded", e);
+      this.createOffer();
     };
 
     this.pc.onconnectionstatechange = (ev) => {
@@ -130,21 +128,6 @@ export class ConnectionManager extends EventEmitter {
   // step 1: Person 1 create Offer for OUTGOING
   createOffer = async (): Promise<RTCSessionDescriptionInit | undefined> => {
     try {
-      const myTracks = this.myStream.getTracks();
-      myTracks.forEach((t) => {
-        console.log(`using ${t.kind} track ${t.label}`);
-      });
-
-      const senders = this.pc.getSenders();
-
-      // add missing tracks to PC
-      myTracks.forEach((track) => {
-        if (!senders.find((s) => s.track?.id === track.id)) {
-          console.log("adding new track to PC", track);
-          this.pc.addTrack(track, this.myStream as MediaStream);
-        }
-      });
-
       // create offer with tracks
       const offer = await this.pc.createOffer();
 
@@ -229,27 +212,23 @@ export class ConnectionManager extends EventEmitter {
   //-- MEDIA HANDLERS
   addTrack(stream: MediaStream) {
     if (!stream) return;
-    const newTracks = stream.getTracks();
-    const myTracks = this.myStream.getTracks();
 
-    newTracks.forEach((t) => {
-      if (!myTracks.find((mt) => mt.id === t.id)) {
-        this.myStream.addTrack(t);
+    const senders = this.pc.getSenders();
+
+    // add missing tracks to PC
+    stream.getTracks().forEach((track) => {
+      if (!senders.find((s) => s.track?.id === track.id)) {
+        console.log("adding new track to PC", track);
+        this.pc.addTrack(track, this.myStream as MediaStream);
       }
     });
-
-    return this.createOffer();
   }
 
   closeTrack(sender: RTCRtpSender) {
     if (sender.track) {
-      // const id = sender.track.id;
       this.myStream.removeTrack(sender.track);
       sender.track.stop();
     }
     this.pc.removeTrack(sender);
-
-    this.emit("update", "senders");
-    // return this.createOffer();
   }
 }
