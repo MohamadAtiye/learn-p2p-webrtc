@@ -16,6 +16,10 @@ const getW = (h: number) => {
       return 1280;
     case 1080:
       return 1920;
+    case 1440:
+      return 2560;
+    case 2160:
+      return 3840;
     default:
       return Math.round((h * 16) / 9);
   }
@@ -126,52 +130,109 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
     sender.track?.applyConstraints(constraints);
   };
 
+  const toggleBitrate = async (val: number) => {
+    const parameters = sender.getParameters();
+    if (!parameters.encodings) {
+      parameters.encodings = [{}];
+    }
+    parameters.encodings[0].maxBitrate = val ? val * 1024 * 1024 : undefined; // Replace with your desired bitrate
+
+    await sender.setParameters(parameters);
+  };
+
   return (
     <Box sx={{ border: "1px solid black", padding: "0 8px" }}>
       <Box>
         <Typography variant="caption">{sender.track?.label}</Typography>
         {kind === "video" && (
           <Box>
-            <Button
-              onClick={() => setVideoRes(360)}
-              title="swtich to 360p"
-              variant={"outlined"}
-              size="small"
-              disabled={videoStats.height === 360}
-            >
-              360p
-            </Button>
-            <Button
-              onClick={() => setVideoRes(480)}
-              title="swtich to 480p"
-              variant="outlined"
-              size="small"
-              disabled={videoStats.height === 480}
-            >
-              480p
-            </Button>
-            <Button
-              onClick={() => setVideoRes(720)}
-              title="swtich to 720p"
-              variant="outlined"
-              size="small"
-              disabled={videoStats.height === 720}
-            >
-              720p
-            </Button>
-            <Button
-              onClick={() => setVideoRes(1080)}
-              title="swtich to 1080p"
-              variant="outlined"
-              size="small"
-              disabled={videoStats.height === 1080}
-            >
-              1080p
-            </Button>
+            <Box>
+              <Button
+                onClick={() => setVideoRes(360)}
+                title="swtich to 360p"
+                variant={"outlined"}
+                size="small"
+                disabled={videoStats.height === 360}
+              >
+                360p
+              </Button>
+              <Button
+                onClick={() => setVideoRes(480)}
+                title="swtich to 480p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 480}
+              >
+                480p
+              </Button>
+              <Button
+                onClick={() => setVideoRes(720)}
+                title="swtich to 720p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 720}
+              >
+                720p
+              </Button>
+              <Button
+                onClick={() => setVideoRes(1080)}
+                title="swtich to 1080p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 1080}
+              >
+                1080p
+              </Button>
+              <Button
+                onClick={() => setVideoRes(1440)}
+                title="swtich to 1440p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 1440}
+              >
+                1440p
+              </Button>
+              <Button
+                onClick={() => setVideoRes(2160)}
+                title="swtich to 2160p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 2160}
+              >
+                2160p
+              </Button>
+            </Box>
             <Typography variant="caption">
               {videoStats.width}x{videoStats.height}@{videoStats.fps}fps, at{" "}
               {stats.bitrate}
             </Typography>
+
+            <Box>
+              <Button
+                onClick={() => toggleBitrate(0)}
+                title="bitrate"
+                variant="outlined"
+                size="small"
+              >
+                standard bitrate
+              </Button>
+              <Button
+                onClick={() => toggleBitrate(5)}
+                title="bitrate"
+                variant="outlined"
+                size="small"
+              >
+                5 mbps
+              </Button>
+              <Button
+                onClick={() => toggleBitrate(10)}
+                title="bitrate"
+                variant="outlined"
+                size="small"
+              >
+                10 mbps
+              </Button>
+            </Box>
           </Box>
         )}
         {kind === "audio" && (

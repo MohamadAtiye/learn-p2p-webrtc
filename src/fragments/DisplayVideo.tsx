@@ -1,4 +1,3 @@
-import { Box } from "@mui/material";
 import { useEffect, useRef } from "react";
 
 interface DisplayVideoProps {
@@ -12,7 +11,7 @@ const DisplayVideo = ({ track }: DisplayVideoProps) => {
     if (videoRef.current) videoRef.current.srcObject = s;
   }, [track]);
 
-  return <video ref={videoRef} height={"100px"} autoPlay />;
+  return <video ref={videoRef} autoPlay style={{ width: "100%" }} />;
 };
 
 export default DisplayVideo;

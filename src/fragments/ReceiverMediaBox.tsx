@@ -100,7 +100,7 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
             <AudioVisualizer track={receiver.track} isLocal={false} />
           )}
         </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", width: "64px" }}>
+        {/* <Box sx={{ display: "flex", flexDirection: "column", width: "64px" }}> */}
           {/* <IconButton onClick={closeTrack} title="end stream">
             <CloseIcon />
           </IconButton>
@@ -112,7 +112,7 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
           >
             {isMuted ? "Unmute" : "mute"}
           </Button> */}
-        </Box>
+        {/* </Box> */}
       </Box>
     </Box>
   );
