@@ -33,7 +33,7 @@ function DisplayMessage({ message }: DisplayMessageProps) {
 }
 
 const ChatBox = () => {
-  const { connectionManager, sendChat, chat } = useData();
+  const { connectionManager, sendChat, chat, isChatOpen } = useData();
   const [status, setStatus] = useState("new");
 
   useEffect(() => {
@@ -80,10 +80,9 @@ const ChatBox = () => {
 
   return (
     <Box
-      display="flex"
+      display={isChatOpen ? "flex" : "none"}
       flexDirection="column"
-      height="100%"
-      sx={{ border: "1px solid gray", overflowY: "hidden" }}
+      sx={{ border: "1px solid gray", overflowY: "hidden", height: "300px" }}
     >
       <Box
         flexGrow={1}

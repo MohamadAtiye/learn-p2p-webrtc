@@ -57,11 +57,17 @@ const RemoteBox = () => {
         border: "1px solid black",
         minWidth: "300px",
         flex: 1,
+        overflowY: "scroll",
+        height: "100%",
       }}
     >
-      <Typography variant="h6" align="center">
-        {remoteName}
-      </Typography>
+      <Box
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <Typography variant="h6" align="center">
+          {remoteName}
+        </Typography>
+      </Box>
 
       {receivers.map(
         (r) => r.track && <ReceiverMediaBox receiver={r} key={r.track.id} />

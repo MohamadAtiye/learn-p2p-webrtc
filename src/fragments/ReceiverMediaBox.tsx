@@ -71,24 +71,45 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
   }, [kind, receiver]);
 
   return (
-    <Box sx={{ border: "1px solid black", padding: "0 8px" }}>
-      <Box>
-        {/* <Typography variant="caption">{receiver.track?.label}</Typography> */}
-        {kind === "video" && (
-          <Box>
-            <Typography variant="caption">
-              {videoStats.width}x{videoStats.height}@{videoStats.fps}fps, at{" "}
-              {stats.bitrate}
-            </Typography>
-          </Box>
-        )}
-        {kind === "audio" && (
-          <Box>
-            <Typography variant="caption">
-              {audioStats.sampleRate}Hz, at {stats.bitrate}
-            </Typography>
-          </Box>
-        )}
+    <Box
+      sx={{
+        border: "1px solid black",
+        position: "relative",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          background: "rgba(0,0,0,0.3)",
+          color: "white",
+          zIndex: 2,
+          padding: "0 8px",
+        }}
+      >
+        <Box>
+          {kind === "video" && (
+            <Box>
+              <Typography variant="caption">
+                {videoStats.width}x{videoStats.height}@{videoStats.fps}fps, at{" "}
+                {stats.bitrate}
+              </Typography>
+            </Box>
+          )}
+          {kind === "audio" && (
+            <Box>
+              <Typography variant="caption">
+                {audioStats.sampleRate}Hz, at {stats.bitrate}
+              </Typography>
+            </Box>
+          )}
+        </Box>
       </Box>
 
       <Box display={"flex"}>
@@ -100,19 +121,6 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
             <AudioVisualizer track={receiver.track} isLocal={false} />
           )}
         </Box>
-        {/* <Box sx={{ display: "flex", flexDirection: "column", width: "64px" }}> */}
-          {/* <IconButton onClick={closeTrack} title="end stream">
-            <CloseIcon />
-          </IconButton>
-          <Button
-            onClick={toggleMute}
-            title="mute track"
-            variant="outlined"
-            size="small"
-          >
-            {isMuted ? "Unmute" : "mute"}
-          </Button> */}
-        {/* </Box> */}
       </Box>
     </Box>
   );

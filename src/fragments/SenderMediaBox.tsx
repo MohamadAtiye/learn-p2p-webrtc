@@ -1,8 +1,19 @@
-import { Box, Button, IconButton, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Typography,
+} from "@mui/material";
 import DisplayVideo from "./DisplayVideo";
 import AudioVisualizer from "./AudioVisualizer";
 import CloseIcon from "@mui/icons-material/Close";
 import useData from "../hooks/Data";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -151,143 +162,196 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
     await sender.setParameters(parameters);
   };
 
+  const [openSettings, setOpenSettings] = useState(false);
+  const handleClickOpenSettings = () => {
+    setOpenSettings(true);
+  };
+  const handleCloseSettings = () => {
+    setOpenSettings(false);
+  };
+
   return (
-    <Box sx={{ border: "1px solid black", padding: "0 8px" }}>
-      <Box>
-        <Typography variant="caption">{sender.track?.label}</Typography>
-        {kind === "video" && (
-          <Box>
-            <Box>
-              <Button
-                onClick={() => setVideoRes(360)}
-                title="swtich to 360p"
-                variant={"outlined"}
-                size="small"
-                disabled={videoStats.height === 360}
-              >
-                360p
-              </Button>
-              <Button
-                onClick={() => setVideoRes(480)}
-                title="swtich to 480p"
-                variant="outlined"
-                size="small"
-                disabled={videoStats.height === 480}
-              >
-                480p
-              </Button>
-
-              {maxHeight > 720 && (
-                <Button
-                  onClick={() => setVideoRes(720)}
-                  title="swtich to 720p"
-                  variant="outlined"
-                  size="small"
-                  disabled={videoStats.height === 720}
-                >
-                  720p
-                </Button>
-              )}
-
-              {maxHeight > 1080 && (
-                <Button
-                  onClick={() => setVideoRes(1080)}
-                  title="swtich to 1080p"
-                  variant="outlined"
-                  size="small"
-                  disabled={videoStats.height === 1080}
-                >
-                  1080p
-                </Button>
-              )}
-              {maxHeight > 1440 && (
-                <Button
-                  onClick={() => setVideoRes(1440)}
-                  title="swtich to 1440p"
-                  variant="outlined"
-                  size="small"
-                  disabled={videoStats.height === 1440}
-                >
-                  1440p
-                </Button>
-              )}
-              {maxHeight > 2160 && (
-                <Button
-                  onClick={() => setVideoRes(2160)}
-                  title="swtich to 2160p"
-                  variant="outlined"
-                  size="small"
-                  disabled={videoStats.height === 2160}
-                >
-                  2160p
-                </Button>
-              )}
-            </Box>
+    <Box
+      sx={{
+        border: "1px solid black",
+        position: "relative",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          background: "rgba(0,0,0,0.3)",
+          color: "white",
+          zIndex: 2,
+          padding: "0 8px",
+        }}
+      >
+        <Box>
+          {kind === "video" && (
             <Typography variant="caption">
               {videoStats.width}x{videoStats.height}@{videoStats.fps}fps, at{" "}
               {stats.bitrate}
             </Typography>
-
-            <Box>
-              <Button
-                onClick={() => toggleBitrate(0)}
-                title="bitrate"
-                variant="outlined"
-                size="small"
-              >
-                standard bitrate
-              </Button>
-              <Button
-                onClick={() => toggleBitrate(5)}
-                title="bitrate"
-                variant="outlined"
-                size="small"
-              >
-                5 mbps
-              </Button>
-              <Button
-                onClick={() => toggleBitrate(10)}
-                title="bitrate"
-                variant="outlined"
-                size="small"
-              >
-                10 mbps
-              </Button>
-            </Box>
-          </Box>
-        )}
-        {kind === "audio" && (
-          <Box>
+          )}
+          {kind === "audio" && (
             <Typography variant="caption">
               {audioStats.sampleRate}Hz, at {stats.bitrate}
             </Typography>
-          </Box>
-        )}
-      </Box>
-
-      <Box display={"flex"}>
-        <Box sx={{ flex: 1 }}>
-          {sender.track?.kind === "video" && (
-            <DisplayVideo track={sender.track} />
-          )}
-          {sender.track?.kind === "audio" && (
-            <AudioVisualizer track={sender.track} isLocal={true} />
           )}
         </Box>
-        <Box sx={{ display: "flex", flexDirection: "column", width: "64px" }}>
-          <IconButton onClick={closeTrack} title="end stream">
-            <CloseIcon />
-          </IconButton>
+
+        <Box>
           <Button
             onClick={toggleMute}
             title="mute track"
             variant="outlined"
             size="small"
+            color="inherit"
           >
             {isMuted ? "Unmute" : "mute"}
           </Button>
+          {kind === "video" && (
+            <IconButton
+              title="Media Settings"
+              onClick={handleClickOpenSettings}
+              color="inherit"
+            >
+              <SettingsIcon fontSize="medium" />
+            </IconButton>
+          )}
+          <IconButton onClick={closeTrack} title="end stream" color="inherit">
+            <CloseIcon />
+          </IconButton>
         </Box>
       </Box>
+
+      <Box display={"flex"}>
+        {sender.track?.kind === "video" && (
+          <DisplayVideo track={sender.track} />
+        )}
+        {sender.track?.kind === "audio" && (
+          <AudioVisualizer track={sender.track} isLocal={true} />
+        )}
+      </Box>
+
+      <Dialog
+        open={openSettings}
+        onClose={handleCloseSettings}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">Video Settings</DialogTitle>
+
+        <DialogContent>
+          <Typography gutterBottom>{sender.track?.label}</Typography>
+          <Box>
+            Change Bitrate:
+            <br />
+            <Button
+              onClick={() => toggleBitrate(0)}
+              title="bitrate"
+              variant="outlined"
+              size="small"
+            >
+              standard bitrate
+            </Button>
+            <Button
+              onClick={() => toggleBitrate(5)}
+              title="bitrate"
+              variant="outlined"
+              size="small"
+            >
+              5 mbps
+            </Button>
+            <Button
+              onClick={() => toggleBitrate(10)}
+              title="bitrate"
+              variant="outlined"
+              size="small"
+            >
+              10 mbps
+            </Button>
+          </Box>
+          <Box>
+            Change Resolution:
+            <br />
+            <Button
+              onClick={() => setVideoRes(360)}
+              title="swtich to 360p"
+              variant={"outlined"}
+              size="small"
+              disabled={videoStats.height === 360}
+            >
+              360p
+            </Button>
+            <Button
+              onClick={() => setVideoRes(480)}
+              title="swtich to 480p"
+              variant="outlined"
+              size="small"
+              disabled={videoStats.height === 480}
+            >
+              480p
+            </Button>
+            {maxHeight > 720 && (
+              <Button
+                onClick={() => setVideoRes(720)}
+                title="swtich to 720p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 720}
+              >
+                720p
+              </Button>
+            )}
+            {maxHeight > 1080 && (
+              <Button
+                onClick={() => setVideoRes(1080)}
+                title="swtich to 1080p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 1080}
+              >
+                1080p
+              </Button>
+            )}
+            {maxHeight > 1440 && (
+              <Button
+                onClick={() => setVideoRes(1440)}
+                title="swtich to 1440p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 1440}
+              >
+                1440p
+              </Button>
+            )}
+            {maxHeight > 2160 && (
+              <Button
+                onClick={() => setVideoRes(2160)}
+                title="swtich to 2160p"
+                variant="outlined"
+                size="small"
+                disabled={videoStats.height === 2160}
+              >
+                2160p
+              </Button>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSettings} color="primary">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

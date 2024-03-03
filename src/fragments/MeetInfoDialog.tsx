@@ -10,9 +10,10 @@ import {
   Typography,
 } from "@mui/material";
 import useData from "../hooks/Data";
+import MediaDevicesSelector from "./MediaDevicesSelector";
 
 const MeetInfoDialog: React.FC = () => {
-  const { connectionManager, joinMeeting } = useData();
+  const { connectionManager, joinMeeting, permissions } = useData();
 
   const [name, setName] = useState("");
   const [meetId, setMeetId] = useState("12345");
@@ -35,8 +36,9 @@ const MeetInfoDialog: React.FC = () => {
 
   return (
     <>
-      <Typography variant="h6" align="center">
-        Meeting ID: {savedMeetId ?? "..."}
+      <Typography variant="caption" align="center">
+        Meeting ID: {savedMeetId ?? "..."}, camera {permissions.camera},
+        microphone {permissions.microphone}
       </Typography>
 
       <Dialog open={!savedMeetId} aria-labelledby="form-dialog-title">

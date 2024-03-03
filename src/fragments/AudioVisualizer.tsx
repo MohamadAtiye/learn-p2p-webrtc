@@ -51,7 +51,14 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const id = open ? "volume-control-popover" : undefined;
 
   return (
-    <Box sx={{ display: "flex", gap: 1 }}>
+    <Box
+      sx={{
+        display: "flex",
+        gap: 1,
+        height: isLocal ? "80px" : "60px",
+        padding: isLocal ? "40px 8px 0 8px" : "20px 8px 0 8px",
+      }}
+    >
       <audio
         ref={audioRef}
         controls

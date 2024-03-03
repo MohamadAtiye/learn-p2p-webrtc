@@ -23,6 +23,8 @@ interface DataContextState {
   sendChat: (text: string) => void;
   chat: ChatMsg[];
   connectionManager: ConnectionManager;
+  toggleChat: () => void;
+  isChatOpen: boolean;
 }
 
 // Create Context Object
@@ -35,6 +37,8 @@ export const DataContext = createContext<DataContextState>({
   sendChat: (t) => {},
   chat: [],
   connectionManager: {} as ConnectionManager,
+  toggleChat: () => {},
+  isChatOpen: false,
 });
 
 export type ChatMsg = {
@@ -59,6 +63,10 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
   const connectionManager = useMemo(() => new ConnectionManager(), []);
 
   const [chat, setChat] = useState<ChatMsg[]>([]);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const toggleChat = () => {
+    setIsChatOpen((p) => !p);
+  };
 
   // monitor camera and microphone permissions
   useEffect(() => {
@@ -131,6 +139,8 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
         sendChat,
         chat,
         connectionManager,
+        toggleChat,
+        isChatOpen,
       }}
     >
       {isLoading && <FullPageLoading />}

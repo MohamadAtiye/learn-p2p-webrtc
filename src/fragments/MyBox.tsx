@@ -34,17 +34,21 @@ const MyBox = () => {
         border: "1px solid black",
         minWidth: "300px",
         flex: 1,
+        overflowY: "scroll",
+        height: "100%",
       }}
     >
-      <Typography variant="h6" align="center">
-        {myName} (ME)
-      </Typography>
+      <Box
+        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+      >
+        <Typography variant="h6" align="center">
+          {myName} (ME)
+        </Typography>
+      </Box>
 
       {senders.map(
         (s) => s.track && <SenderMediaBox sender={s} key={s.track.id} />
       )}
-
-      <MediaDevicesSelector />
     </Box>
   );
 };

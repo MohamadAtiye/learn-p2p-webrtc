@@ -16,12 +16,12 @@ import {
 } from "../utils/webrtcWrapper";
 import VideoCallIcon from "@mui/icons-material/VideoCall";
 import AddIcCallIcon from "@mui/icons-material/AddIcCall";
-import SettingsIcon from "@mui/icons-material/Settings";
 import ScreenShareIcon from "@mui/icons-material/ScreenShare";
+import ChatIcon from "@mui/icons-material/Chat";
 import { useEffect, useRef, useState } from "react";
 
 const MediaDevicesSelector = () => {
-  const { connectionManager, permissions } = useData();
+  const { connectionManager, permissions, toggleChat } = useData();
   const [status, setStatus] = useState("new");
 
   const [open, setOpen] = useState<StreamType | undefined>(undefined);
@@ -40,7 +40,6 @@ const MediaDevicesSelector = () => {
     const usedTracks = connectionManager.pc
       .getSenders()
       .map((s) => s.track?.label);
-    // connectionManager.myStream.getTracks().map((t) => t.label);
 
     setDevices(available.filter((a) => !usedTracks.includes(a.label)));
 
@@ -114,15 +113,17 @@ const MediaDevicesSelector = () => {
         onClick={() => handleClickOpen(StreamType.video)}
         ref={anchorRef_video}
       >
-        <VideoCallIcon fontSize="medium" />
+        <VideoCallIcon fontSize="large" />
       </IconButton>
+
       <IconButton
         title={"Share Screen"}
         disabled={status !== "connected"}
         onClick={() => addTrack(StreamType.screen)}
       >
-        <ScreenShareIcon fontSize="medium" />
+        <ScreenShareIcon fontSize="large" />
       </IconButton>
+
       <IconButton
         title={permissions.microphone !== "granted" ? "blocked" : "Add Audio"}
         disabled={
@@ -131,10 +132,11 @@ const MediaDevicesSelector = () => {
         onClick={() => handleClickOpen(StreamType.audio)}
         ref={anchorRef_audio}
       >
-        <AddIcCallIcon fontSize="medium" />
+        <AddIcCallIcon fontSize="large" />
       </IconButton>
-      <IconButton title="Media Settings">
-        <SettingsIcon fontSize="medium" />
+
+      <IconButton title={"Open Chat"} onClick={toggleChat}>
+        <ChatIcon fontSize="large" />
       </IconButton>
 
       {/* DEVICE LIST POPUP */}
@@ -148,12 +150,12 @@ const MediaDevicesSelector = () => {
         }
         onClose={handleClose}
         anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "center",
+          vertical: "top",
+          horizontal: "right",
         }}
         transformOrigin={{
-          vertical: "top",
-          horizontal: "center",
+          vertical: "bottom",
+          horizontal: "right",
         }}
       >
         <Paper elevation={2} sx={{ border: "1px solid black" }}>
