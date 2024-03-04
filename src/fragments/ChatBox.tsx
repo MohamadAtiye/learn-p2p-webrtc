@@ -12,8 +12,6 @@ interface DisplayMessageProps {
   message: ChatMsg;
 }
 function DisplayMessage({ message }: DisplayMessageProps) {
-  // const { profile } = useData();
-
   return (
     <Box
       alignSelf={message.from === "me" ? "flex-start" : "flex-end"}
@@ -80,9 +78,14 @@ const ChatBox = () => {
 
   return (
     <Box
-      display={isChatOpen ? "flex" : "none"}
+      display={"flex"}
       flexDirection="column"
-      sx={{ border: "1px solid gray", overflowY: "hidden", height: "300px" }}
+      sx={{
+        border: "1px solid gray",
+        overflowY: "hidden",
+        height: isChatOpen ? "300px" : 0,
+        transition: "height 0.2s ease-in",
+      }}
     >
       <Box
         flexGrow={1}

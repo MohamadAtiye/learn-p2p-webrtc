@@ -1,4 +1,4 @@
-import { Box, Link, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import MediaDevicesSelector from "./MediaDevicesSelector";
 
 export function Footer() {
@@ -7,17 +7,9 @@ export function Footer() {
       sx={{
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "right",
       }}
     >
-      <Typography variant="body2" color="text.secondary" align="center">
-        {"Copyright © "}
-        <Link color="inherit" href="https://atiye.ru/">
-          Atiye.ru
-        </Link>{" "}
-        {new Date().getFullYear()}.
-      </Typography>
-
       <MediaDevicesSelector />
     </Box>
   );
