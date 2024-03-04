@@ -1,16 +1,13 @@
 import { Box, Container, Paper } from "@mui/material";
 import React from "react";
 import { Header } from "./fragments/Header";
-import { Copyright } from "./fragments/Copyright";
-import useData from "./hooks/Data";
+import { Footer } from "./fragments/Footer";
 import MeetInfoDialog from "./fragments/MeetInfoDialog";
 import ChatBox from "./fragments/ChatBox";
 import MyBox from "./fragments/MyBox";
 import RemoteBox from "./fragments/RemoteBox";
 
 function App() {
-  const { permissions } = useData();
-
   return (
     <Box
       sx={{
@@ -18,9 +15,11 @@ function App() {
         width: "100vw",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
       <Header />
+
       <Container
         component={Paper}
         maxWidth="lg"
@@ -30,23 +29,24 @@ function App() {
           flexDirection: "column",
           height: "100%",
           overflow: "hidden",
-          padding: "8px 0",
         }}
       >
         <MeetInfoDialog />
-
-        <p>
-          camera {permissions.camera}, microphone {permissions.microphone}
-        </p>
-
-        <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+        <Box
+          sx={{
+            height: "100%",
+            display: "flex",
+            flexWrap: "wrap",
+            overflow: "hidden",
+          }}
+        >
           <MyBox />
           <RemoteBox />
         </Box>
 
         <ChatBox />
+        <Footer />
       </Container>
-      <Copyright />
     </Box>
   );
 }
