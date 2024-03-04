@@ -1,12 +1,31 @@
 import { EventEmitter } from "events";
-import { Message, Signal, mType } from "./signalling";
+import { PollTypes, Polling } from "./polling";
+
+const POLL_URL = "http://localhost:8001/poll.php";
 
 // type RTCPeerConnectionState = "closed" | "connected" | "connecting" | "disconnected" | "failed" | "new"
 
+export enum DataMsgType {
+  hangup = "hangup",
+  chat = "chat",
+  whoAreYou = "whoAreYou",
+  iAm = "iAm",
+}
+
 export type DataMsg = {
-  type: "chat" | "whoAreYou" | "iAm";
+  type: DataMsgType;
   data: string;
 };
+
+enum CallStatus {
+  new = "new",
+  sentReady = "sentReady",
+  gotReady = "gotReady",
+  sentOffer = "sentOffer",
+  gotOffer = "gotOffer",
+  sentAnswer = "sentAnswer",
+  gotAnswer = "gotAnswer",
+}
 
 export class ConnectionManager extends EventEmitter {
   pc = new RTCPeerConnection();
@@ -18,12 +37,18 @@ export class ConnectionManager extends EventEmitter {
   meetId = "";
   status = "new";
 
+  callStatus: CallStatus = CallStatus.new; // 'ready','setOffer','gotOffer','sendAnswer','gotAnswer'
+  setCallStatus(s: CallStatus) {
+    this.callStatus = s;
+    this.emit("callStatus", this.callStatus);
+  }
+
   myStream = new MediaStream();
 
   errors: string[] = [];
   logs: string[] = [];
 
-  signal = new Signal("webtc");
+  polling = new Polling(POLL_URL);
 
   constructor() {
     super();
@@ -31,7 +56,7 @@ export class ConnectionManager extends EventEmitter {
     this.dataChannel = this.pc.createDataChannel("MyApp Channel");
     this.dataChannel.onopen = (d) => {
       if (!this.remoteName) {
-        this.dataChannelSend(mType.whoAreYou, undefined);
+        this.dataChannelSend(DataMsgType.whoAreYou, undefined);
       }
     };
     this.dataChannel.onmessage = (d) => console.log("dataChannel onmessage", d);
@@ -47,40 +72,73 @@ export class ConnectionManager extends EventEmitter {
     };
   }
 
+  postPoll(type: PollTypes, data?: any) {
+    this.polling.post(type, data);
+    switch (type) {
+      case PollTypes.ready:
+        this.setCallStatus(CallStatus.sentReady);
+        break;
+      case PollTypes.offer:
+        this.setCallStatus(CallStatus.sentOffer);
+        break;
+      case PollTypes.answer:
+        this.setCallStatus(CallStatus.sentAnswer);
+        break;
+    }
+  }
+
   init = (myName: string, meetId: string) => {
     this.myName = myName;
     this.meetId = meetId;
     this.emit("update", "meetId");
     this.emit("update", "myName");
 
-    this.signal.sendReady(myName);
+    this.polling.setData(this.myName, this.meetId);
+    this.polling.start((type: PollTypes, data: string) => {
+      if (!type) return;
 
-    this.signal.listen((m) => {
-      switch (m.type) {
+      switch (type) {
         // handle someone joined room
-        case mType.ready:
-          this.handleGotReady(m);
+        case PollTypes.ready:
+          this.setCallStatus(CallStatus.gotReady);
+          this.handleGotReady(data);
           break;
         // handle someone sent me offer
-        case mType.offer:
-          this.handleGotOffer(m);
+        case PollTypes.offer:
+          this.setCallStatus(CallStatus.gotOffer);
+          this.handleGotOffer(data);
           break;
         // handle someone sent me answer
-        case mType.answer:
-          this.handleGotAnswer(m);
+        case PollTypes.answer:
+          this.setCallStatus(CallStatus.gotAnswer);
+          this.handleGotAnswer(data);
           break;
         // handle someone sent me candidate
-        case mType.candidate:
-          this.handleCandidate(m);
+        case PollTypes.candidate:
+          this.handleCandidate(data);
           break;
         default:
           break;
       }
     });
 
+    //finish first POLL before sending ready
+    setTimeout(() => {
+      console.log(this.callStatus);
+      if (this.callStatus === CallStatus.new)
+        this.postPoll(PollTypes.ready, "nodata");
+    }, 4000);
+
     this.pc.onicecandidate = (e) => {
       if (e.candidate) {
-        this.signal.sendCandidate(e);
+        if (!e.candidate) return this.postPoll(PollTypes.candidate);
+
+        const data = {
+          candidate: e.candidate.candidate,
+          sdpMLineIndex: e.candidate?.sdpMLineIndex ?? undefined,
+          sdpMid: e.candidate?.sdpMid ?? undefined,
+        };
+        this.postPoll(PollTypes.candidate, JSON.stringify(data));
       }
     };
 
@@ -102,7 +160,7 @@ export class ConnectionManager extends EventEmitter {
     const msg: DataMsg = JSON.parse(d.data);
     if (msg.type === "chat") self.emit("chat", msg.data);
     else if (msg.type === "whoAreYou") {
-      this.dataChannelSend(mType.iAm, self.myName);
+      this.dataChannelSend(DataMsgType.iAm, self.myName);
     } else if (msg.type === "iAm") {
       self.remoteName = msg.data;
       this.emit("update", "remoteName");
@@ -110,7 +168,7 @@ export class ConnectionManager extends EventEmitter {
   }
 
   // TODO sanitise data
-  private dataChannelSend(type: mType, payload: any) {
+  private dataChannelSend(type: DataMsgType, payload: any) {
     let data = !payload
       ? undefined
       : typeof payload === "string"
@@ -121,7 +179,7 @@ export class ConnectionManager extends EventEmitter {
   }
 
   sendChat(data: string) {
-    this.dataChannelSend(mType.chat, data);
+    this.dataChannelSend(DataMsgType.chat, data);
     console.log("Sent Data: " + data);
   }
 
@@ -139,7 +197,7 @@ export class ConnectionManager extends EventEmitter {
         return;
       }
 
-      this.signal.sendOffer(offer);
+      this.postPoll(PollTypes.offer, offer.sdp);
 
       // send offer to Person 2
       return offer;
@@ -176,37 +234,37 @@ export class ConnectionManager extends EventEmitter {
   };
 
   //-- MESSAGE HANDLERS
-  handleGotReady = async (m: Message) => {
+  handleGotReady = async (data: string) => {
     //if already connected, ignore
     if (this.status === "connected") {
-      console.log("GOT READY MESSAGE", m);
+      console.log("GOT READY MESSAGE", data);
       console.log("ALREADY BUSY, WILL IGNORE");
       return;
     }
 
-    this.remoteName = m.data;
+    this.remoteName = data;
 
     await this.createOffer();
 
     this.emit("update", "remoteName");
   };
 
-  handleGotOffer = async (m: Message) => {
-    const answer = await this.createAnswer(m.data);
+  handleGotOffer = async (data: string) => {
+    const answer = await this.createAnswer({ type: "offer", sdp: data });
     if (!answer || !answer.sdp) {
       this.errors.push("Failed to answer");
       return;
     }
 
-    this.signal.sendAnswer(answer);
+    this.postPoll(PollTypes.answer, answer.sdp);
   };
 
-  handleGotAnswer = (m: Message) => {
-    this.receiveAnswer(m.data);
+  handleGotAnswer = (data: string) => {
+    this.receiveAnswer({ type: "answer", sdp: data });
   };
 
-  handleCandidate = async (m: Message) => {
-    await this.pc.addIceCandidate(m.data);
+  handleCandidate = async (data: any) => {
+    await this.pc.addIceCandidate(JSON.parse(data));
   };
 
   //-- MEDIA HANDLERS

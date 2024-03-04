@@ -1,5 +1,7 @@
 import { Box, Typography } from "@mui/material";
+import useData from "../hooks/Data";
 export function Header() {
+  const { callStatus } = useData();
   return (
     <Box
       sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}
@@ -11,6 +13,7 @@ export function Header() {
       >
         P2P WebRTC
       </Typography>
+      , status: {callStatus}
     </Box>
   );
 }

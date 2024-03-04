@@ -25,6 +25,7 @@ interface DataContextState {
   connectionManager: ConnectionManager;
   toggleChat: () => void;
   isChatOpen: boolean;
+  callStatus: string;
 }
 
 // Create Context Object
@@ -39,6 +40,7 @@ export const DataContext = createContext<DataContextState>({
   connectionManager: {} as ConnectionManager,
   toggleChat: () => {},
   isChatOpen: false,
+  callStatus: "new",
 });
 
 export type ChatMsg = {
@@ -67,6 +69,8 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
   const toggleChat = () => {
     setIsChatOpen((p) => !p);
   };
+
+  const [callStatus, setCallStatus] = useState("new");
 
   // monitor camera and microphone permissions
   useEffect(() => {
@@ -102,11 +106,18 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
   useEffect(() => {
     function handleChat(data: string) {
       setChat((p) => [...p, { from: "remote", ts: Date.now(), text: data }]);
+      setIsChatOpen(true);
+    }
+    function updateCallStatus(data: string) {
+      setCallStatus(data);
     }
     connectionManager && connectionManager.on("chat", handleChat);
+    connectionManager && connectionManager.on("callStatus", updateCallStatus);
 
     return () => {
       connectionManager && connectionManager.off("chat", handleChat);
+      connectionManager &&
+        connectionManager.off("callStatus", updateCallStatus);
     };
   }, [connectionManager]);
 
@@ -141,6 +152,7 @@ export const DataContextProvider: React.FC<DataContextProviderProps> = ({
         connectionManager,
         toggleChat,
         isChatOpen,
+        callStatus,
       }}
     >
       {isLoading && <FullPageLoading />}
