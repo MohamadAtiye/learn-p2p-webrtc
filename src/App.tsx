@@ -4,8 +4,8 @@ import { Header } from "./fragments/Header";
 import { Footer } from "./fragments/Footer";
 import MeetInfoDialog from "./fragments/MeetInfoDialog";
 import ChatBox from "./fragments/ChatBox";
-import MyBox from "./fragments/MyBox";
-import RemoteBox from "./fragments/RemoteBox";
+import Receivers from "./fragments/Receivers";
+import Senders from "./fragments/Senders";
 
 function App() {
   return (
@@ -32,16 +32,20 @@ function App() {
         }}
       >
         <MeetInfoDialog />
+
         <Box
           sx={{
             height: "100%",
+            width: "100%",
             display: "flex",
             flexWrap: "wrap",
-            overflow: "hidden",
+            overflowY: "auto",
+            border: "1px dashed gray",
+            alignContent: "flex-start",
           }}
         >
-          <MyBox />
-          <RemoteBox />
+          <Senders />
+          <Receivers />
         </Box>
 
         <ChatBox />

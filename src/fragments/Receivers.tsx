@@ -3,10 +3,9 @@ import useData from "../hooks/Data";
 import { useEffect, useState } from "react";
 import ReceiverMediaBox from "./ReceiverMediaBox";
 
-const RemoteBox = () => {
+const Receivers = () => {
   const { connectionManager } = useData();
 
-  const [remoteName, setRemoteName] = useState("");
   const [receivers, setReceivers] = useState<RTCRtpReceiver[]>([]);
 
   useEffect(() => {
@@ -14,12 +13,6 @@ const RemoteBox = () => {
   }, [receivers]);
 
   useEffect(() => {
-    function handleUpdates(field: string) {
-      if (field === "remoteName") {
-        setRemoteName(connectionManager.remoteName);
-      }
-    }
-
     function updateReceivers() {
       const temp = connectionManager.pc
         .getReceivers()
@@ -28,7 +21,6 @@ const RemoteBox = () => {
       setReceivers(temp);
     }
 
-    connectionManager.on("update", handleUpdates);
     connectionManager.pc.ontrack = (e) => {
       e.streams[0].onaddtrack = (ev) => {
         console.log("e.streams[0].onaddtrack", ev);
@@ -45,35 +37,15 @@ const RemoteBox = () => {
       console.log("connectionManager.pc.ontrack", e);
       updateReceivers();
     };
-
-    return () => {
-      connectionManager.off("update", handleUpdates);
-    };
   }, [connectionManager]);
 
   return (
-    <Box
-      sx={{
-        border: "1px solid black",
-        minWidth: "300px",
-        flex: 1,
-        overflowY: "scroll",
-        height: "100%",
-      }}
-    >
-      <Box
-        sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}
-      >
-        <Typography variant="h6" align="center">
-          {remoteName}
-        </Typography>
-      </Box>
-
+    <>
       {receivers.map(
         (r) => r.track && <ReceiverMediaBox receiver={r} key={r.track.id} />
       )}
-    </Box>
+    </>
   );
 };
 
-export default RemoteBox;
+export default Receivers;

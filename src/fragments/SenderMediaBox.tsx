@@ -4,7 +4,6 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogContentText,
   DialogTitle,
   IconButton,
   Typography,
@@ -175,6 +174,10 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
       sx={{
         border: "1px solid black",
         position: "relative",
+        flex: 1,
+        minWidth: "300px",
+        order: kind === "audio" ? 10 : 1,
+        maxHeight: kind === "audio" ? "80px" : undefined,
       }}
     >
       <Box
@@ -232,14 +235,10 @@ const SenderMediaBox = ({ sender }: SenderMediaBoxProps) => {
         </Box>
       </Box>
 
-      <Box display={"flex"}>
-        {sender.track?.kind === "video" && (
-          <DisplayVideo track={sender.track} />
-        )}
-        {sender.track?.kind === "audio" && (
-          <AudioVisualizer track={sender.track} isLocal={true} />
-        )}
-      </Box>
+      {sender.track?.kind === "video" && <DisplayVideo track={sender.track} />}
+      {sender.track?.kind === "audio" && (
+        <AudioVisualizer track={sender.track} isLocal={true} />
+      )}
 
       <Dialog
         open={openSettings}

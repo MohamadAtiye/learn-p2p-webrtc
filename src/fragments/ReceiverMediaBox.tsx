@@ -75,6 +75,10 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
       sx={{
         border: "1px solid black",
         position: "relative",
+        flex: 1,
+        minWidth: "300px",
+        order: kind === "audio" ? 10 : 1,
+        maxHeight: kind === "audio" ? "80px" : undefined,
       }}
     >
       <Box
@@ -112,16 +116,12 @@ const ReceiverMediaBox = ({ receiver }: ReceiverMediaBoxProps) => {
         </Box>
       </Box>
 
-      <Box display={"flex"}>
-        <Box sx={{ flex: 1 }}>
-          {receiver.track?.kind === "video" && (
-            <DisplayVideo track={receiver.track} />
-          )}
-          {receiver.track?.kind === "audio" && (
-            <AudioVisualizer track={receiver.track} isLocal={false} />
-          )}
-        </Box>
-      </Box>
+      {receiver.track?.kind === "video" && (
+        <DisplayVideo track={receiver.track} />
+      )}
+      {receiver.track?.kind === "audio" && (
+        <AudioVisualizer track={receiver.track} isLocal={false} />
+      )}
     </Box>
   );
 };

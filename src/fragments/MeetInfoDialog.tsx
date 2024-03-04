@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import useData from "../hooks/Data";
-import MediaDevicesSelector from "./MediaDevicesSelector";
 
 const MeetInfoDialog: React.FC = () => {
   const { connectionManager, joinMeeting, permissions } = useData();
@@ -18,10 +17,18 @@ const MeetInfoDialog: React.FC = () => {
   const [name, setName] = useState("");
   const [meetId, setMeetId] = useState("12345");
   const [savedMeetId, setSavedMeetId] = useState("");
+  const [myName, setMyName] = useState("");
+  const [remoteName, setRemoteName] = useState("");
 
   useEffect(() => {
     function handleUpdates(field: string) {
-      if (field === "meetId") setSavedMeetId(connectionManager.meetId);
+      if (field === "meetId") {
+        setSavedMeetId(connectionManager.meetId);
+      } else if (field === "myName") {
+        setMyName(connectionManager.myName);
+      } else if (field === "remoteName") {
+        setRemoteName(connectionManager.remoteName);
+      }
     }
     connectionManager.on("update", handleUpdates);
     return () => {
@@ -37,8 +44,9 @@ const MeetInfoDialog: React.FC = () => {
   return (
     <>
       <Typography variant="caption" align="center">
-        Meeting ID: {savedMeetId ?? "..."}, camera {permissions.camera},
-        microphone {permissions.microphone}
+        Meeting ID: {savedMeetId ?? "..."} between {myName ?? "..."} (you) and{" "}
+        {remoteName ?? "..."}(remote)
+        <br /> camera {permissions.camera}, microphone {permissions.microphone}
       </Typography>
 
       <Dialog open={!savedMeetId} aria-labelledby="form-dialog-title">
