@@ -127,7 +127,7 @@ export class ConnectionManager extends EventEmitter {
     setTimeout(() => {
       console.log(this.callStatus);
       if (this.callStatus === CallStatus.new)
-        this.postPoll(PollTypes.ready, "nodata");
+        this.postPoll(PollTypes.ready, this.myName);
     }, 4000);
 
     this.pc.onicecandidate = (e) => {
