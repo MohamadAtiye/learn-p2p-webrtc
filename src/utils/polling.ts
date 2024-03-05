@@ -23,11 +23,10 @@ export class Polling {
     try {
       if (!this.to) return;
 
-      let url = new URL(this.url);
-      url.searchParams.append("from", this.from);
-      url.searchParams.append("to", this.to);
+      let q = { from: this.from, to: this.to };
+      let queryParams = new URLSearchParams(q).toString();
 
-      const response = await fetch(url, {
+      const response = await fetch(`${this.url}?${queryParams}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

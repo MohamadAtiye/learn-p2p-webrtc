@@ -1,7 +1,8 @@
 import { EventEmitter } from "events";
 import { PollTypes, Polling } from "./polling";
 
-const POLL_URL = "http://localhost:8001/poll.php";
+const POLL_URL = window.location.href + "api/poll.php";
+// const POLL_URL = "http://localhost:8001/poll.php";
 
 // type RTCPeerConnectionState = "closed" | "connected" | "connecting" | "disconnected" | "failed" | "new"
 
